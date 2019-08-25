@@ -1,0 +1,38 @@
+{
+    "develop": false,
+    "confJob": {
+        "seach": {
+            "numOfReload": 12,
+            "delay": 30000,
+            "numOfTry": 10,
+            "quickCycle": true
+        },
+        "night": {
+            "numOfReload": 8,
+            "delay": 8000,
+            "numOfTry": 5,
+            "quickCycle": true
+        },
+        "sign": {
+            "numOfReload": 5,
+            "delay": 5000,
+            "numOfTry": 5,
+            "quickCycle": true
+        }
+    },
+    "telegram": {
+        "api": "telegram_api_key",
+        "proxy": "http://host:password@ip:port",
+        "admins": ["ids"]
+    },
+    "captcha": {
+        "api_ru": "api_key",
+        "api": "api_key"
+    },
+    "google_sheet": {
+        "client_secret": {},
+        "spreadsheet_id": "id",
+        "nameOfTable": "НАЗВАНИЕ ТАБЛИЦЫ"
+    },
+    "proxyArr": ["ip:port"]
+}
