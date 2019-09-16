@@ -20,10 +20,20 @@
             "quickCycle": true
         }
     },
+    "queue": {
+        "region": "ru-central1",
+        "accessKeyId": "От сервисного аккаунта",
+        "secretAccessKey": "От сервисного аккаунта",
+        "QueueUrls": {
+            "nameOfQueue": "URL"
+        }
+    },
     "telegram": {
         "api": "telegram_api_key",
         "proxy": "http://host:password@ip:port",
-        "admins": ["ids"]
+        "admins": [
+            "ids"
+        ]
     },
     "captcha": {
         "api_ru": "api_key",
@@ -34,5 +44,7 @@
         "spreadsheet_id": "id",
         "nameOfTable": "НАЗВАНИЕ ТАБЛИЦЫ"
     },
-    "proxyArr": ["ip:port"]
+    "proxyArr": [
+        "ip:port"
+    ]
 }
