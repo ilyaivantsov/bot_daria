@@ -15,6 +15,7 @@ function getQueue(conf) {
         constructor({ URL }) {
             this.URL = URL;
             this.sqs = new AWS.SQS();
+            this.process = false;
         }
 
         /**
@@ -22,6 +23,7 @@ function getQueue(conf) {
          * @param {Array} clients Массив клиентов из GoogleTable 
          */
         async generateQueue(clients) {
+            this.process = true;
             for (let i = 0; i < clients.length; i++) {
                 let params = {
                     QueueUrl: this.URL,
@@ -37,6 +39,7 @@ function getQueue(conf) {
                         console.log("Error", err);
                     });
             }
+            this.process = false;
         }
 
         clearQueue() {
@@ -55,19 +58,30 @@ function getQueue(conf) {
             };
 
             let res = await this.sqs.receiveMessage(params).promise()
-                .then((data) => { return { client: JSON.parse(data.Messages[0].Body), ReceiptHandle: data.Messages[0].ReceiptHandle } })
+                .then((data) => { return data.Messages ? { client: JSON.parse(data.Messages[0].Body), ReceiptHandle: data.Messages[0].ReceiptHandle } : { client: false, ReceiptHandle: false }; })
                 .catch(err => console.log("Receive Error", err));
 
-            let deleteParams = {
-                QueueUrl: this.URL,
-                ReceiptHandle: res.ReceiptHandle
-            };
+            if (res.client) {
+                let deleteParams = {
+                    QueueUrl: this.URL,
+                    ReceiptHandle: res.ReceiptHandle
+                };
 
-            await this.sqs.deleteMessage(deleteParams).promise()
-                .then(data => console.log("Message Deleted", data))
-                .catch(err => console.log("Delete Error", err));
-
+                await this.sqs.deleteMessage(deleteParams).promise()
+                    .then(data => console.log("Message Deleted", data))
+                    .catch(err => console.log("Delete Error", err));
+            }
             return res.client;
+        }
+
+        async numOfClients() {
+            let params = {
+                QueueUrl: this.URL,
+                AttributeNames: ['ApproximateNumberOfMessages']
+            }
+            return await this.sqs.getQueueAttributes(params).promise()
+            .then(data => data.Attributes.ApproximateNumberOfMessages)
+            .catch(err => console.log("Error", err));
         }
     }
     return Queue;
