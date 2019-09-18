@@ -2,31 +2,53 @@
 process.env.TZ = 'Europe/Moscow';
 var socket = require('socket.io-client')('http://localhost:6481');
 var path = require('path');
-var CronJob = require('cron').CronJob;
-const path_to = require(path.join(__dirname, '/common/path_to'));
 const conf = require(path.join(__dirname, '/conf.json'));
 var bot = require(path.join(__dirname, '/manager/telegram/telegrafBot'))(conf);
 var gs = require(path.join(__dirname, '/manager/google-sheet/gs'))(conf);
 var Queue = require(path.join(__dirname, '/manager/queue/Queue'))(conf);
-var queueSeach = new Queue({ URL: conf.queue.QueueUrls.test });
-var queueNight = new Queue({ URL: conf.queue.QueueUrls.test });
-//
-var gsParams = { nameOfTable: 'ЕКАТ' };
+var Cycle = require(path.join(__dirname, '/manager/cycle/Cycle'));
+var socketHandler = require(path.join(__dirname, '/manager/socket/socketHandler'));
+// Queues
+var queueSeach = new Queue({ URL: conf.queue.QueueUrls.seach });
+var queueNight = new Queue({ URL: conf.queue.QueueUrls.night });
+var queueSign = new Queue({ URL: conf.queue.QueueUrls.sign });
+var queueSigned = new Queue({ URL: conf.queue.QueueUrls.signed });
+//Cycles
+var cycleSeach = new Cycle({ socket: socket, queue: queueSeach });
+var cycleNight = new Cycle({ socket: socket, queue: queueNight, nameCycle: "Ночь", numClients: 3 });
+var cycleSign = new Cycle({ socket: socket, queue: queueSign, nameCycle: "Запись", numClients: 5, on: true });
+//Params
+var gsParams = { nameOfTable: 'ТЕСТ' };
 
-bot.action("seach_on", async () => {
-
+bot.action("seach_on", ({ reply }) => {
+    if (cycleSeach.on) {
+        reply(`Уже работает`);
+        return 0;
+    }
+    cycleSeach.on = true;
+    cycleSeach.tick()
+        .then(msg => bot.sendMsgToAdmin(msg))
+        .catch(err => console.log(err));
 })
 
-bot.action("seach_off", async () => {
-
+bot.action("seach_off", ({ reply }) => {
+    cycleSeach.on = false;
+    reply("Бот выключен Поиск");
 })
 
-bot.action("night_on", async () => {
-
+bot.action("night_on", ({ reply }) => {
+    if (cycleNight.on) {
+        reply(`Уже работает`);
+        return 0;
+    }
+    cycleNight.on = true;
+    cycleNight.cronStart('*/10 * * * * *', bot);
 })
 
-bot.action("night_off", async () => {
-
+bot.action("night_off", ({ reply }) => {
+    cycleNight.on = false;
+    cycleNight.cronStop();
+    reply("Бот выключен Ночь");
 })
 
 bot.action("queue_create_seach", async ({ replyWithMarkdown }) => {
@@ -83,4 +105,17 @@ bot.action("queue_clear_night", async ({ reply }) => {
     return 0;
 })
 
-bot.launch()
+gs.build(gsParams)
+    .then(gsRes => {
+        socketHandler({
+            socket: socket,
+            bot: bot,
+            cycleSeach: cycleSeach,
+            cycleSign: cycleSign,
+            queueSign: queueSign,
+            queueSigned: queueSigned,
+            gs: gsRes
+        });
+        bot.launch()
+    })
+    .catch(err => console.log(err));
