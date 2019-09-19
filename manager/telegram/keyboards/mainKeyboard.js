@@ -2,12 +2,14 @@ const Markup = require('telegraf/markup');
 
 const keyboardON = Markup.inlineKeyboard([
     [Markup.callbackButton('Поисковый бот', 'seach_on')],
-    [Markup.callbackButton('Ночной бот', 'night_on')]
+    [Markup.callbackButton('Ночной бот', 'night_on')],
+    [Markup.callbackButton('❗️ Запись', 'sign_on')]
 ]);
 
 const keyboardOFF = Markup.inlineKeyboard([
     [Markup.callbackButton('Поисковый бот', 'seach_off')],
-    [Markup.callbackButton('Ночной бот', 'night_off')]
+    [Markup.callbackButton('Ночной бот', 'night_off')],
+    [Markup.callbackButton('❗️ Запись', 'sign_off')]
 ]);
 
 const queueCreate = Markup.inlineKeyboard([

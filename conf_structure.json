@@ -28,6 +28,11 @@
             "nameOfQueue": "URL"
         }
     },
+    "socket": "http://ip:port",
+    "cronJob": {
+        "night": "* * * * * *",
+        "sign": "* * * * * *"
+    },
     "telegram": {
         "api": "telegram_api_key",
         "proxy": "http://host:password@ip:port",

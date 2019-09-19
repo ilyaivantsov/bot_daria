@@ -1,7 +1,7 @@
 var path = require('path');
 var path_to = require(path.join(__dirname, '..', '..', '/common/path_to'));
 
-function socketHandler({ socket, bot, cycleSeach, cycleSign, queueSign, queueSigned, gs }) {
+function socketHandler({ socket, bot, cycleSeach, queueSign, queueSigned, gs }) {
 
     socket.on('no time', (client) => {
         bot.sendMsgToAdmin(`❌ В данный момент нет доступных мест для записи. Бот: ${client.login}`);
@@ -22,18 +22,8 @@ ${msg}
             queueSign.numOfClients()
                 .then(num => num == 0 ? gs.getClientsForSign(date) : 0)
                 .then(clients => queueSign.generateQueue(clients))
-                .then(() => console.log("Очередь для записи создана"))
+                .then(() => bot.sendMsgToAdmin("Очередь для записи создана. Для запуска /turn_on"))
                 .catch(err => console.log(err));
-
-            cycleSign.tick()
-                .then(msg => bot.sendMsgToAdmin(msg))
-                .catch(err => console.log(err));
-
-            setTimeout(() => {
-                cycleSeach.tick()
-                    .then(msg => bot.sendMsgToAdmin(msg))
-                    .catch(err => console.log(err));
-            }, 30000);
         }
     });
 

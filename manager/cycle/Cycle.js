@@ -1,13 +1,14 @@
 var CronJob = require('cron').CronJob;
 
 class Cycle {
-    constructor({ socket, queue, numClients = 1, nameCycle = 'Seach', on = false }) {
+    constructor({ socket, queue, numClients = 1, nameCycle = 'Seach', cronScheme = "*/10 * * * * *" }) {
         this.socket = socket;
         this.queue = queue;
-        this.on = on;
+        this.on = false;
         this.numClients = numClients;
         this.nameCycle = nameCycle;
         this.cronJob = null;
+        this.cronScheme = cronScheme;
     }
 
     async tick() {
@@ -26,10 +27,11 @@ class Cycle {
         return i == 0 ? `${this.nameCycle} очередь пустая.` : msg;
     }
 
-    cronStart(scheme, bot) {
-        this.cronJob = new CronJob(scheme, () => { this.tick().then(msg => bot.sendMsgToAdmin(msg)).catch(err => console.log(err)) }, null, true, 'America/Los_Angeles');
+    cronStart(bot) {
+        this.cronJob = new CronJob(this.cronScheme, () => { this.tick().then(msg => bot.sendMsgToAdmin(msg)).catch(err => console.log(err)) }, null, true, 'America/Los_Angeles');
         this.cronJob.start();
     }
+
     cronStop() {
         if (this.cronJob) {
             this.cronJob.stop();

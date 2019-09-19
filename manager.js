@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 process.env.TZ = 'Europe/Moscow';
-var socket = require('socket.io-client')('http://localhost:6481');
 var path = require('path');
 const conf = require(path.join(__dirname, '/conf.json'));
+var socket = require('socket.io-client')(conf.socket);
 var bot = require(path.join(__dirname, '/manager/telegram/telegrafBot'))(conf);
 var gs = require(path.join(__dirname, '/manager/google-sheet/gs'))(conf);
 var Queue = require(path.join(__dirname, '/manager/queue/Queue'))(conf);
@@ -15,10 +15,10 @@ var queueSign = new Queue({ URL: conf.queue.QueueUrls.sign });
 var queueSigned = new Queue({ URL: conf.queue.QueueUrls.signed });
 //Cycles
 var cycleSeach = new Cycle({ socket: socket, queue: queueSeach });
-var cycleNight = new Cycle({ socket: socket, queue: queueNight, nameCycle: "Ночь", numClients: 3 });
-var cycleSign = new Cycle({ socket: socket, queue: queueSign, nameCycle: "Запись", numClients: 5, on: true });
+var cycleNight = new Cycle({ socket: socket, queue: queueNight, nameCycle: "Ночь", numClients: 3, cronScheme: conf.cronJob.night });
+var cycleSign = new Cycle({ socket: socket, queue: queueSign, nameCycle: "Запись", numClients: 5, cronScheme: conf.cronJob.sign });
 //Params
-var gsParams = { nameOfTable: 'ТЕСТ' };
+var gsParams = { nameOfTable: 'МСК' };
 
 bot.action("seach_on", ({ reply }) => {
     if (cycleSeach.on) {
@@ -42,13 +42,28 @@ bot.action("night_on", ({ reply }) => {
         return 0;
     }
     cycleNight.on = true;
-    cycleNight.cronStart('*/10 * * * * *', bot);
+    cycleNight.cronStart(bot);
 })
 
 bot.action("night_off", ({ reply }) => {
     cycleNight.on = false;
     cycleNight.cronStop();
     reply("Бот выключен Ночь");
+})
+
+bot.action("sign_on", ({ reply }) => {
+    if (cycleSign.on) {
+        reply(`Уже работает`);
+        return 0;
+    }
+    cycleSign.on = true;
+    cycleSign.cronStart(bot);
+})
+
+bot.action("sign_off", ({ reply }) => {
+    cycleSign.on = false;
+    cycleSign.cronStop();
+    reply("Бот выключен Запись");
 })
 
 bot.action("queue_create_seach", async ({ replyWithMarkdown }) => {
@@ -111,7 +126,6 @@ gs.build(gsParams)
             socket: socket,
             bot: bot,
             cycleSeach: cycleSeach,
-            cycleSign: cycleSign,
             queueSign: queueSign,
             queueSigned: queueSigned,
             gs: gsRes
