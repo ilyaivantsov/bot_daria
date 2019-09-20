@@ -63,7 +63,16 @@ ${client.error}
         }
     });
 
-    socket.on('error sing', (client) => {
+    socket.on('error timetable', (client) => {
+        bot.sendPhotoToAdmin(path_to.time(client, '_err'), `❌ Ошибка обновления таблицы. Бот: ${client.login}`);
+        if (client.type == 'seach') {
+            cycleSeach.tick()
+                .then(msg => bot.sendMsgToAdmin(msg))
+                .catch(err => console.log(err));
+        }
+    })
+
+    socket.on('error sign', (client) => {
         bot.sendPhotoToAdmin(path_to.time(client, '_err'), `❌ Ошибка записи. Бот: ${client.login}`);
     });
 }

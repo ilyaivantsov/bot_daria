@@ -1,7 +1,7 @@
 var CronJob = require('cron').CronJob;
 
 class Cycle {
-    constructor({ socket, queue, numClients = 1, nameCycle = 'Seach', cronScheme = "*/10 * * * * *" }) {
+    constructor({ socket, queue, numClients = 1, nameCycle = 'Seach', cronScheme = "*/30 * * * * *" }) {
         this.socket = socket;
         this.queue = queue;
         this.on = false;
