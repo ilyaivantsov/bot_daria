@@ -18,7 +18,7 @@ var cycleSeach = new Cycle({ socket: socket, queue: queueSeach });
 var cycleNight = new Cycle({ socket: socket, queue: queueNight, nameCycle: "Ночь", numClients: 3, cronScheme: conf.cronJob.night });
 var cycleSign = new Cycle({ socket: socket, queue: queueSign, nameCycle: "Запись", numClients: 5, cronScheme: conf.cronJob.sign });
 //Params
-var gsParams = { nameOfTable: 'МСК' };
+var gsParams = { nameOfTable: conf.google_sheet.nameOfTable };
 
 bot.action("seach_on", ({ reply }) => {
     if (cycleSeach.on) {
@@ -103,8 +103,10 @@ bot.action("queue_create_night", async ({ replyWithMarkdown }) => {
 bot.action("queue_create_info", async ({ replyWithMarkdown }) => {
     let seachClients = await queueSeach.numOfClients();
     let nightClients = await queueNight.numOfClients();
+    let signClients = await queueSign.numOfClients();
     replyWithMarkdown(`В очереди для поиска: *${seachClients}* 
-В очереди для ночного: *${nightClients}*`);
+В очереди для ночного: *${nightClients}*
+В очереди для записи: *${signClients}*`);
     return 0;
 })
 

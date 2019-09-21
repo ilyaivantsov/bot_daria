@@ -13,7 +13,7 @@ function index(conf) {
             executablePath: conf.develop ? puppeteer.executablePath() : '/usr/bin/chromium-browser'
         };
         const browser = await puppeteer.launch(launchOptions);
-        var date = [];
+        var date = null;
         var page = await authorization(client, browser);
 
         if (client.conf.quickCycle) {

@@ -321,8 +321,8 @@ function main(conf) {
      * @returns {Array} [page,true/false] - true - continue, false - stop 
      */
     async function toSignUp(client, page) {
+        const scheduleURL = 'https://cgifederal.secure.force.com/scheduleappointment';
         try {
-            const scheduleURL = 'https://cgifederal.secure.force.com/scheduleappointment';
             if (page.url().split('?')[0] != scheduleURL) {
                 await page.goto(scheduleURL);
             }
@@ -330,12 +330,14 @@ function main(conf) {
             const timeTable = await page.$$('td[onclick]');
 
             if (!timeTable.length) {
+                log(client, 'Закончились места');
                 return [page, false];
             }
 
             var avlDateForClient = await _checkTimetableForClient(page, client);
 
             if (!avlDateForClient.length) {
+                log(client, 'Нет подходящих мест для записи');
                 return [page, false];
             }
 
@@ -359,6 +361,7 @@ function main(conf) {
         }
         catch (err) {
             errLog(err, client);
+            await page.goto(scheduleURL);
             // if (client.conf.numOfTry == 1) {
             //     await page.screenshot({ path: path_to.time(client, '_err'), fullPage: true });
             // }
