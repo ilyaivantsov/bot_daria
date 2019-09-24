@@ -14,7 +14,7 @@ var queueNight = new Queue({ URL: conf.queue.QueueUrls.night });
 var queueSign = new Queue({ URL: conf.queue.QueueUrls.sign });
 var queueSigned = new Queue({ URL: conf.queue.QueueUrls.signed });
 //Cycles
-var cycleSeach = new Cycle({ socket: socket, queue: queueSeach });
+var cycleSeach = new Cycle({ socket: socket, queue: queueSeach, nameCycle: "Поиск" });
 var cycleNight = new Cycle({ socket: socket, queue: queueNight, nameCycle: "Ночь", numClients: 3, cronScheme: conf.cronJob.night });
 var cycleSign = new Cycle({ socket: socket, queue: queueSign, nameCycle: "Запись", numClients: 5, cronScheme: conf.cronJob.sign });
 //Params
@@ -25,15 +25,16 @@ bot.action("seach_on", ({ reply }) => {
         reply(`Уже работает`);
         return 0;
     }
+    bot.sendMsgToAdmin('🙉 Поисковый бот включен!');
     cycleSeach.on = true;
     cycleSeach.tick()
         .then(msg => bot.sendMsgToAdmin(msg))
         .catch(err => console.log(err));
 })
 
-bot.action("seach_off", ({ reply }) => {
+bot.action("seach_off", () => {
     cycleSeach.on = false;
-    reply("Бот выключен Поиск");
+    bot.sendMsgToAdmin("🙈 Поисковый бот выключен!");
 })
 
 bot.action("night_on", ({ reply }) => {
@@ -41,14 +42,15 @@ bot.action("night_on", ({ reply }) => {
         reply(`Уже работает`);
         return 0;
     }
+    bot.sendMsgToAdmin('🙉 Ночной бот включен!');
     cycleNight.on = true;
     cycleNight.cronStart(bot);
 })
 
-bot.action("night_off", ({ reply }) => {
+bot.action("night_off", () => {
     cycleNight.on = false;
     cycleNight.cronStop();
-    reply("Бот выключен Ночь");
+    bot.sendMsgToAdmin("🙈 Ночной бот выключен!");
 })
 
 bot.action("sign_on", ({ reply }) => {
@@ -56,14 +58,15 @@ bot.action("sign_on", ({ reply }) => {
         reply(`Уже работает`);
         return 0;
     }
+    bot.sendMsgToAdmin('🙉 Бот для записи включен!');
     cycleSign.on = true;
     cycleSign.cronStart(bot);
 })
 
-bot.action("sign_off", ({ reply }) => {
+bot.action("sign_off", () => {
     cycleSign.on = false;
     cycleSign.cronStop();
-    reply("Бот выключен Запись");
+    bot.sendMsgToAdmin("🙈 Бот для записи выключен!");
 })
 
 bot.action("queue_create_seach", async ({ replyWithMarkdown }) => {

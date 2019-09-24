@@ -122,7 +122,7 @@ function main(conf) {
                 page.waitForNavigation(),
                 page.click('input[type="submit"]'),
             ]);
-            await page.waitFor(3000);
+            await page.waitFor(6000);
             var URL = page.url().split('?')[0];
             // Status
             if (URL == 'https://cgifederal.secure.force.com/applicanthome') {
@@ -144,7 +144,7 @@ function main(conf) {
             if (err.type != 1) {
                 errLog(err, client);
             }
-            throw err;
+            throw ({ type: 1 });
         }
     }
 
