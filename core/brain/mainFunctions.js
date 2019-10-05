@@ -13,7 +13,7 @@ function main(conf) {
     const path_to = require(path.join(__dirname, '..', '..', '/common/path_to'));
     const log = require(path.join(__dirname, '..', '..', '/common/log'));
     const errLog = require(path.join(__dirname, '..', '..', '/common/err_log'));
-    const currYear = new Date().getFullYear();
+    const currYear = 2020;//new Date().getFullYear();
 
     async function _setBrowserSettings(client, browser) {
         try {
@@ -326,6 +326,7 @@ function main(conf) {
             if (page.url().split('?')[0] != scheduleURL) {
                 await page.goto(scheduleURL);
             }
+            client.conf.numOfTry--;
 
             const timeTable = await page.$$('td[onclick]');
 
@@ -341,31 +342,22 @@ function main(conf) {
                 return [page, false];
             }
 
-            log(client, `Попытка записи ${client.conf.numOfTry}`);
             var num = avlDateForClient.map(elm => elm.num);
 
             await timeTable[num[Math.floor(Math.random() * num.length)]].click();
             await page.waitFor(3000);
             const selectDate = await page.$$('input[type="checkbox"]');
             await selectDate[Math.floor(Math.random() * selectDate.length)].click();
-            const submit = await page.$('input[type="button"]');
-            await submit.click();
-            await page.waitFor(15000);
+            // const submit = await page.$('input[type="button"]');
+            // await submit.click();
 
-            if (page.url().split('?')[0] == 'https://cgifederal.secure.force.com/appointmentconfirmation') {
-                await page.waitFor(10000);
-                await page.screenshot({ path: path_to.time(client, '_time'), fullPage: true });
-                return [page, false, true];
-            }
+            log(client, `Попытка записи ${client.conf.numOfTry}`);
             return [page, true];
         }
         catch (err) {
             errLog(err, client);
             await page.goto(scheduleURL);
-            // if (client.conf.numOfTry == 1) {
-            //     await page.screenshot({ path: path_to.time(client, '_err'), fullPage: true });
-            // }
-            throw ({ type: 4, page: page });
+            return [page, true];            
         }
     }
 

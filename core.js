@@ -18,13 +18,7 @@ io.on('connection', (socket) => {
             }
             if (type == 2) {
                 socket.emit('time', client, data.date);
-                var ans = await mainMskSign(data);
-                if (ans.type == 1) {
-                    socket.emit('sign up', client);
-                }
-                if (ans.type == 2) {
-                    socket.emit('no sign up', client);
-                }
+                await mainMskSign(data, socket);
             }
             return 0;
         }
