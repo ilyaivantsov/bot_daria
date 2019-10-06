@@ -3,6 +3,7 @@ const path = require('path');
 function index(conf) {
     const puppeteer = conf.develop ? require('puppeteer') : require('puppeteer-core');
     const log = require(path.join(__dirname, '..', '..', '/common/log'));
+    const path_to = require(path.join(__dirname, '..', '..', '/common/path_to'));
     const { authorization, toFillOutFormsMsk, checkTimetable, toSignUp, _logOut } = require(path.join(__dirname, '..', '/brain/mainFunctions'))(conf);
 
     async function mainMskSeach(client) {
@@ -36,25 +37,36 @@ function index(conf) {
         return { type: 2, data: { browser: browser, page: page, client: client, date: date } };
     }
 
-    async function mainMskSign({ browser, page, client }) {
-        try {
-            var flag = true, sign;
+    async function mainMskSign({ browser, page, client }, socket) {
 
-            while (flag && client.conf.numOfTry-- > 1) {
-                [page, flag, sign] = await toSignUp(client, page);
+        var flag = false;
+
+        async function listener() {
+            if (flag && client.conf.numOfTry > 1) {
+                [page, flag] = await toSignUp(client, page);
             }
-
-            if (sign) {
-                log(client, "Успешно записался!!!");
+            else if (page.url().split('?')[0] == 'https://cgifederal.secure.force.com/appointmentconfirmation') {
+                await page.screenshot({ path: path_to.time(client, '_time'), fullPage: true });
+                page.removeListener('domcontentloaded', listener);
                 await _logOut(page, browser);
-                return { type: 1 };
+                log(client, "Успешно записался!!!");
+                socket.emit('sign up', client);
             }
-
-            await _logOut(page, browser);
-            return { type: 2 };
+            else {
+                page.removeListener('domcontentloaded', listener);
+                await _logOut(page, browser);
+                socket.emit('no sign up', client);
+            }
         }
-        catch (err) {
-            return mainMskSign({ browser: browser, page: err.page, client: client });
+
+        page.on('domcontentloaded', listener);
+
+        var [page, flag] = await toSignUp(client, page);
+
+        if (!flag) {
+            page.removeListener('domcontentloaded', listener);
+            await _logOut(page, browser);
+            socket.emit('no sign up', client);
         }
     }
 

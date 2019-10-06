@@ -50,12 +50,17 @@ function main(conf) {
     async function _checkTimetable(page) {
         var time = await page.evaluate((currYear) => {
             var date = [];
+            var currentMonth = new Date().getMonth();
             var timeTable = document.querySelectorAll('td[onclick]');
             timeTable.forEach((elm, index) => {
                 var month = elm.closest('.ui-datepicker-group').querySelector('.ui-datepicker-month').textContent.toLowerCase();
-                date.push({ date: new Date(currYear, _getNumOfMounth(month), +elm.textContent).getTime(), num: index });
+                var m = _getNumOfMonth(month),
+                    d = +elm.textContent,
+                    y = currentMonth > m ? currYear + 1 : currYear;
+
+                date.push({ date: new Date(y, m, d).getTime(), num: index });
             });
-            function _getNumOfMounth(mon) {
+            function _getNumOfMonth(mon) {
                 var s = '';
                 switch (mon) {
                     case "январь": s = 0; break;
@@ -93,8 +98,8 @@ function main(conf) {
             client.notDate.forEach(date => {
                 avlDate = avlDate.filter(elm => elm.date != new Date(currYear, date.month, date.day).getTime());
             });
-            avlDate = avlDate.filter(elm => elm.date >= new Date(currYear, client.afterDate.month, client.afterDate.day).getTime());
-            avlDate = avlDate.filter(elm => elm.date <= new Date(currYear, client.beforeDate.month, client.beforeDate.day).getTime());
+            avlDate = avlDate.filter(elm => elm.date >= new Date(client.afterDate.year, client.afterDate.month, client.afterDate.day).getTime());
+            avlDate = avlDate.filter(elm => elm.date <= new Date(client.beforeDate.year, client.beforeDate.month, client.beforeDate.day).getTime());
             // return avlDate.map(elm => elm.num);
             return avlDate;
         }
@@ -326,6 +331,7 @@ function main(conf) {
             if (page.url().split('?')[0] != scheduleURL) {
                 await page.goto(scheduleURL);
             }
+            client.conf.numOfTry--;
 
             const timeTable = await page.$$('td[onclick]');
 
@@ -341,7 +347,6 @@ function main(conf) {
                 return [page, false];
             }
 
-            log(client, `Попытка записи ${client.conf.numOfTry}`);
             var num = avlDateForClient.map(elm => elm.num);
 
             await timeTable[num[Math.floor(Math.random() * num.length)]].click();
@@ -350,22 +355,14 @@ function main(conf) {
             await selectDate[Math.floor(Math.random() * selectDate.length)].click();
             const submit = await page.$('input[type="button"]');
             await submit.click();
-            await page.waitFor(15000);
 
-            if (page.url().split('?')[0] == 'https://cgifederal.secure.force.com/appointmentconfirmation') {
-                await page.waitFor(10000);
-                await page.screenshot({ path: path_to.time(client, '_time'), fullPage: true });
-                return [page, false, true];
-            }
+            log(client, `Попытка записи ${client.conf.numOfTry}`);
             return [page, true];
         }
         catch (err) {
             errLog(err, client);
             await page.goto(scheduleURL);
-            // if (client.conf.numOfTry == 1) {
-            //     await page.screenshot({ path: path_to.time(client, '_err'), fullPage: true });
-            // }
-            throw ({ type: 4, page: page });
+            return [page, true];
         }
     }
 

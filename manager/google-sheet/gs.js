@@ -26,11 +26,13 @@ function getGoogleSpredSheet(conf) {
                     password: client['пароль'],
                     afterDate: {
                         month: m_after - 1,
-                        day: +d_after
+                        day: +d_after,
+                        year: +y_after
                     },
                     beforeDate: {
                         month: m_before - 1,
-                        day: +d_before
+                        day: +d_before,
+                        year: +y_before
                     }
                 }
             })
