@@ -12,6 +12,7 @@ function main(conf) {
     const anticaptcha = require(path.join(__dirname, '..', '/captcha/captchaSolver'))(conf);
     const path_to = require(path.join(__dirname, '..', '..', '/common/path_to'));
     const log = require(path.join(__dirname, '..', '..', '/common/log'));
+    const errLog = require(path.join(__dirname, '..', '..', '/common/err_log'));
     const currYear = new Date().getFullYear();
 
     async function _setBrowserSettings(client, browser) {
@@ -24,7 +25,7 @@ function main(conf) {
         }
         catch (err) {
             await browser.close();
-            throw (err);
+            errLog(err, client);
         }
     }
 
@@ -36,7 +37,7 @@ function main(conf) {
             return 0;
         }
         catch (err) {
-            throw (err);
+            errLog(err);
         }
     }
 
@@ -105,182 +106,183 @@ function main(conf) {
         log(client, "Начало работы ...");
         try {
             const page = await _setBrowserSettings(client, browser);
-            await page.goto(url, { waitUntil: 'networkidle2' });
-	    await page.waitForSelector('img[xmlns]');
-            // await page.waitFor(10000);
+            await page.goto(url);
+            await page.waitForSelector('img[xmlns]');
             const [login, capcha] = await page.$$('input[type="text"]');
             const password = await page.$('input[type="password"]');
             const checkbox = await page.$('input[type="checkbox"]');
-            const submit = await page.$('input[type="submit"]');
             const base64ImgCaptcha = await page.evaluate(() => document.querySelector('img').src);
             await checkbox.click();
             // Input auth information
             await login.type(client.login);
             await password.type(client.password);
             await capcha.type(await anticaptcha(base64ImgCaptcha));
-            // Check auth status
-            await submit.click();
-            // After click
-            // await page.waitForNavigation({ waitUntil: 'networkidle2' });
-            await page.waitFor(15000);
-            // If auth error
-            const buttonApply = await page.$('.current');
-            if (!buttonApply) {
-                client.error = await page.evaluate(() => document.querySelector('.errorM3').textContent.replace(/^\s*/, '').replace(/\s*$/, ''));
-                // await page.screenshot({ path: path_to.authorization(client), fullPage: true });
-                await browser.close();
-                log(client, "Ошибка авторизации");
-                throw ({ type: 1, img: true });
+            // Auth and Check status
+            await Promise.all([
+                page.waitForNavigation(),
+                page.click('input[type="submit"]'),
+            ]);
+            await page.waitFor(6000);
+            var URL = page.url().split('?')[0];
+            // Status
+            if (URL == 'https://cgifederal.secure.force.com/applicanthome') {
+                log(client, "Успешная авторизация!");
+                return page;
             }
-            return page;
+            if (URL == 'https://cgifederal.secure.force.com/SiteLogin') {
+                log(client, "Ошибка авторизации");
+                client.error = await page.evaluate(() => document.querySelector('.errorM3').textContent.replace(/^\s*/, '').replace(/\s*$/, ''));
+            }
+            if (URL == 'https://cgifederal.secure.force.com/_ui/system/security/ChangePassword') {
+                log(client, "Смена пароля");
+                client.error = "Необходимо сменить пароль";
+            }
+            throw ({ type: 1 });
         }
         catch (err) {
             await browser.close();
-            if (err.type == 64) {
-                throw ({ msg: err.msg, type: 1, img: false });
-            } else {
-                throw ({ msg: err, type: 1 });
+            if (err.type != 1) {
+                errLog(err, client);
             }
+            throw ({ type: 1 });
         }
     }
 
     async function toFillOutFormsMsk(client, page, browser) {
-        log(client, "Успешная авторизация!");
         try {
             var nextSteps, ansArr;
             // Step 1.
             const buttonApply = await page.$('.current');
             await buttonApply.click();
-            await page.waitForNavigation({ waitUntil: 'networkidle2' });
+            await page.waitForNavigation();
             await page.waitForSelector('input[type="submit"]');
             // Step 2.
             nextSteps = await page.$$('input[type="submit"]');
             ansArr = await page.$$('input[type="radio"]');
             await ansArr[0].click();
             await nextSteps[1].click();
-            await page.waitForNavigation({ waitUntil: 'networkidle2' });
+            await page.waitForNavigation();
             await page.waitForSelector('input[type="submit"]');
             // Step 3.
             nextSteps = await page.$$('input[type="submit"]');
             ansArr = await page.$$('input[type="radio"]');
             await ansArr[0].click();
             await nextSteps[1].click();
-            await page.waitForNavigation({ waitUntil: 'networkidle2' });
+            await page.waitForNavigation();
             await page.waitForSelector('input[type="submit"]');
             // Step 4.
             nextSteps = await page.$$('input[type="submit"]');
             ansArr = await page.$$('input[type="radio"]');
             await ansArr[2].click();
             await nextSteps[1].click();
-            await page.waitForNavigation({ waitUntil: 'networkidle2' });
+            await page.waitForNavigation();
             await page.waitForSelector('input[type="submit"]');
             // Step 5.
             nextSteps = await page.$$('input[type="submit"]');
             ansArr = await page.$$('input[type="radio"]');
             await ansArr[1].click();
             await nextSteps[1].click();
-            await page.waitForNavigation({ waitUntil: 'networkidle2' });
+            await page.waitForNavigation();
             await page.waitForSelector('input[type="submit"]');
             // Step 6.
             nextSteps = await page.$('input[type="button"]');
             await nextSteps.click();
-            await page.waitForNavigation({ waitUntil: 'networkidle2' });
+            await page.waitForNavigation();
             await page.waitForSelector('input[type="submit"]');
             // Step 7.
             nextSteps = await page.$$('input[type="submit"]');
             await nextSteps[1].click();
-            await page.waitForNavigation({ waitUntil: 'networkidle2' });
+            await page.waitForNavigation();
             await page.waitForSelector('input[type="submit"]');
             // Step 8.
             nextSteps = await page.$$('input[type="submit"]'); // No. Belrus
             await nextSteps[1].click();
-            await page.waitForNavigation({ waitUntil: 'networkidle2' });
+            await page.waitForNavigation();
             await page.waitForSelector('input[type="submit"]');
             // Step 9. 
             nextSteps = await page.$$('input[type="submit"]');
             await nextSteps[1].click();
-            await page.waitForNavigation({ waitUntil: 'networkidle2' });
+            await page.waitForNavigation();
             await page.waitForSelector('button');
-            // await page.waitFor(3000); // Wait for modal window
             // Step 10.
             const submitInfoFromModalWindow = await page.$('button');
             await submitInfoFromModalWindow.click();
             nextSteps = await page.$$('input[type="submit"]');
             await nextSteps[1].click();
-            await page.waitForNavigation({ waitUntil: 'networkidle2' });
-            await page.waitFor(3000);
+            await page.waitForNavigation();
             // Step 11. Calendar
             return page;
         }
         catch (err) {
+            errLog(err, client);
             await page.screenshot({ path: path_to.fill(client), fullPage: true });
             await _logOut(page, browser);
-            throw ({ msg: err, type: 2 });
+            throw ({ type: 2 });
         }
     }
 
     async function toFillOutFormsVld(client, page, browser) {
-        log(client, "Успешная авторизация!");
         try {
             var nextSteps, ansArr;
             // Step 1.
             const buttonApply = await page.$('.current');
             await buttonApply.click();
-            await page.waitForNavigation({ waitUntil: 'networkidle2' });
+            await page.waitForNavigation();
             // Step 2.
             nextSteps = await page.$$('input[type="submit"]');
             ansArr = await page.$$('input[type="radio"]');
             await ansArr[0].click();
             await nextSteps[1].click();
-            await page.waitForNavigation({ waitUntil: 'networkidle2' });
+            await page.waitForNavigation();
             // Step 3.
             nextSteps = await page.$$('input[type="submit"]');
             ansArr = await page.$$('input[type="radio"]');
             await ansArr[3].click();
             await nextSteps[1].click();
-            await page.waitForNavigation({ waitUntil: 'networkidle2' });
+            await page.waitForNavigation();
             // Step 4.
             nextSteps = await page.$$('input[type="submit"]');
             ansArr = await page.$$('input[type="radio"]');
             await ansArr[1].click();
             await nextSteps[1].click();
-            await page.waitForNavigation({ waitUntil: 'networkidle2' });
+            await page.waitForNavigation();
             // Step 5.
             nextSteps = await page.$$('input[type="submit"]');
             ansArr = await page.$$('input[type="radio"]');
             await ansArr[1].click();
             await nextSteps[1].click();
-            await page.waitForNavigation({ waitUntil: 'networkidle2' });
+            await page.waitForNavigation();
             // Step 6.
             nextSteps = await page.$('input[type="button"]');
             await nextSteps.click();
-            await page.waitForNavigation({ waitUntil: 'networkidle2' });
+            await page.waitForNavigation();
             // Step 7.
             nextSteps = await page.$$('input[type="submit"]');
             await nextSteps[1].click();
-            await page.waitForNavigation({ waitUntil: 'networkidle2' });
+            await page.waitForNavigation();
             // Step 8.
             nextSteps = await page.$$('input[type="submit"]'); // No. Belrus
             await nextSteps[1].click();
-            await page.waitForNavigation({ waitUntil: 'networkidle2' });
+            await page.waitForNavigation();
             // Step 9. 
             nextSteps = await page.$$('input[type="submit"]');
             await nextSteps[1].click();
-            await page.waitForNavigation({ waitUntil: 'networkidle2' });
-            await page.waitFor(1000); // Wait for modal window
+            await page.waitForNavigation();
+            await page.waitForSelector('button'); // Wait for modal window
             // Step 10.
             const submitInfoFromModalWindow = await page.$('button');
             await submitInfoFromModalWindow.click();
             nextSteps = await page.$$('input[type="submit"]');
             await nextSteps[1].click();
-            await page.waitForNavigation({ waitUntil: 'networkidle2' });
+            await page.waitForNavigation();
             // Step 11. Calendar
             return page;
         }
         catch (err) {
+            errLog(err, client);
             await page.screenshot({ path: path_to.fill(client), fullPage: true });
             await _logOut(page, browser);
-            throw ({ msg: err, type: 2 });
+            throw ({ type: 2 });
         }
     }
 
@@ -289,19 +291,15 @@ function main(conf) {
      * @param {Object} client 
      * @param {Object} page 
      * @param {Object} browser 
-     * @param {Number} numOfReload 
-     * @param {Number} delay
      * @returns {Array} [page,date || false]
      */
-    async function checkTimetable(client, page, browser, numOfReload = 1, delay = 1000) {
-        log(client, `Обновление времени ${numOfReload}`);
+    async function checkTimetable(client, page, browser) {
+        log(client, `Обновление времени ${client.conf.numOfReload}`);
         try {
-            // await page.screenshot({ path: path_to.time(client), fullPage: true });
             const timeTable = await page.$$('td[onclick]');
             if (!timeTable.length) {
-                await page.waitFor(delay);
-                await page.reload({ waitUntil: 'networkidle2' });
-                // await page.goto(page.url(), { waitUntil: 'networkidle2' });
+                await page.waitFor(client.conf.delay);
+                await page.reload();
                 return [page, false];
             }
             log(client, "Нашел время!!!");
@@ -309,9 +307,10 @@ function main(conf) {
             return [page, date];
         }
         catch (err) {
+            errLog(err, client);
             await page.screenshot({ path: path_to.time(client, '_err'), fullPage: true });
             await _logOut(page, browser);
-            throw ({ msg: err, type: 3 });
+            throw ({ type: 3 });
         }
     }
 
@@ -319,30 +318,30 @@ function main(conf) {
      * 
      * @param {Object} client 
      * @param {Object} page 
-     * @param {Object} browser
-     * @param {Number} numOfTry
-     * @returns {Array} [page,date,true/false] - true - continue, false - stop 
+     * @returns {Array} [page,true/false] - true - continue, false - stop 
      */
-    async function toSignUp(client, page, browser, numOfTry = 1) {
+    async function toSignUp(client, page) {
+        const scheduleURL = 'https://cgifederal.secure.force.com/scheduleappointment';
         try {
-            const scheduleURL = 'https://cgifederal.secure.force.com/scheduleappointment';
             if (page.url().split('?')[0] != scheduleURL) {
-                await page.goto(scheduleURL, { waitUntil: 'networkidle2' });
+                await page.goto(scheduleURL);
             }
 
             const timeTable = await page.$$('td[onclick]');
 
             if (!timeTable.length) {
-                return [page, [], false];
+                log(client, 'Закончились места');
+                return [page, false];
             }
 
-            var avlDate = await _checkTimetable(page);
             var avlDateForClient = await _checkTimetableForClient(page, client);
 
             if (!avlDateForClient.length) {
-                return [page, avlDate, false];
+                log(client, 'Нет подходящих мест для записи');
+                return [page, false];
             }
-            log(client, `Попытка записи ${numOfTry}`);
+
+            log(client, `Попытка записи ${client.conf.numOfTry}`);
             var num = avlDateForClient.map(elm => elm.num);
 
             await timeTable[num[Math.floor(Math.random() * num.length)]].click();
@@ -353,18 +352,20 @@ function main(conf) {
             await submit.click();
             await page.waitFor(15000);
 
-            if (page.url().split('?')[0] === 'https://cgifederal.secure.force.com/appointmentconfirmation') {
+            if (page.url().split('?')[0] == 'https://cgifederal.secure.force.com/appointmentconfirmation') {
                 await page.waitFor(10000);
                 await page.screenshot({ path: path_to.time(client, '_time'), fullPage: true });
-                return [page, avlDate, false];
+                return [page, false, true];
             }
-            return [page, avlDate, true];
+            return [page, true];
         }
         catch (err) {
-            console.log(err);
-            await page.screenshot({ path: path_to.time(client, '_err'), fullPage: true });
-            await _logOut(page, browser);
-            throw ({ msg: err, type: 4 });
+            errLog(err, client);
+            await page.goto(scheduleURL);
+            // if (client.conf.numOfTry == 1) {
+            //     await page.screenshot({ path: path_to.time(client, '_err'), fullPage: true });
+            // }
+            throw ({ type: 4, page: page });
         }
     }
 
