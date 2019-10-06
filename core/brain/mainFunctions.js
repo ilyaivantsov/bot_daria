@@ -13,7 +13,7 @@ function main(conf) {
     const path_to = require(path.join(__dirname, '..', '..', '/common/path_to'));
     const log = require(path.join(__dirname, '..', '..', '/common/log'));
     const errLog = require(path.join(__dirname, '..', '..', '/common/err_log'));
-    const currYear = 2020;//new Date().getFullYear();
+    const currYear = new Date().getFullYear();
 
     async function _setBrowserSettings(client, browser) {
         try {
@@ -50,12 +50,17 @@ function main(conf) {
     async function _checkTimetable(page) {
         var time = await page.evaluate((currYear) => {
             var date = [];
+            var currentMonth = new Date().getMonth();
             var timeTable = document.querySelectorAll('td[onclick]');
             timeTable.forEach((elm, index) => {
                 var month = elm.closest('.ui-datepicker-group').querySelector('.ui-datepicker-month').textContent.toLowerCase();
-                date.push({ date: new Date(currYear, _getNumOfMounth(month), +elm.textContent).getTime(), num: index });
+                var m = _getNumOfMonth(month),
+                    d = +elm.textContent,
+                    y = currentMonth > m ? currYear + 1 : currYear;
+
+                date.push({ date: new Date(y, m, d).getTime(), num: index });
             });
-            function _getNumOfMounth(mon) {
+            function _getNumOfMonth(mon) {
                 var s = '';
                 switch (mon) {
                     case "январь": s = 0; break;
@@ -93,8 +98,8 @@ function main(conf) {
             client.notDate.forEach(date => {
                 avlDate = avlDate.filter(elm => elm.date != new Date(currYear, date.month, date.day).getTime());
             });
-            avlDate = avlDate.filter(elm => elm.date >= new Date(currYear, client.afterDate.month, client.afterDate.day).getTime());
-            avlDate = avlDate.filter(elm => elm.date <= new Date(currYear, client.beforeDate.month, client.beforeDate.day).getTime());
+            avlDate = avlDate.filter(elm => elm.date >= new Date(client.afterDate.year, client.afterDate.month, client.afterDate.day).getTime());
+            avlDate = avlDate.filter(elm => elm.date <= new Date(client.beforeDate.year, client.beforeDate.month, client.beforeDate.day).getTime());
             // return avlDate.map(elm => elm.num);
             return avlDate;
         }
@@ -348,8 +353,8 @@ function main(conf) {
             await page.waitFor(3000);
             const selectDate = await page.$$('input[type="checkbox"]');
             await selectDate[Math.floor(Math.random() * selectDate.length)].click();
-            // const submit = await page.$('input[type="button"]');
-            // await submit.click();
+            const submit = await page.$('input[type="button"]');
+            await submit.click();
 
             log(client, `Попытка записи ${client.conf.numOfTry}`);
             return [page, true];
@@ -357,7 +362,7 @@ function main(conf) {
         catch (err) {
             errLog(err, client);
             await page.goto(scheduleURL);
-            return [page, true];            
+            return [page, true];
         }
     }
 
