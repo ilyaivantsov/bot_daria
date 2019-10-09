@@ -42,30 +42,35 @@ function index(conf) {
         var flag = false;
 
         async function listener() {
-            if (flag && client.conf.numOfTry > 1) {
-                [page, flag] = await toSignUp(client, page);
-            }
-            else if (page.url().split('?')[0] == 'https://cgifederal.secure.force.com/appointmentconfirmation') {
+            let URL = page.url().split('?')[0];
+
+            if (URL == 'https://cgifederal.secure.force.com/appointmentconfirmation') {
                 await page.screenshot({ path: path_to.time(client, '_time'), fullPage: true });
                 page.removeListener('domcontentloaded', listener);
                 await _logOut(page, browser);
                 log(client, "Успешно записался!!!");
                 socket.emit('sign up', client);
             }
+            else if (flag && client.conf.numOfTry > 1) {
+                [page, flag] = await toSignUp(client, page);
+            }
             else {
+                await page.screenshot({ path: path_to.time(client, '_err'), fullPage: true });
                 page.removeListener('domcontentloaded', listener);
                 await _logOut(page, browser);
+                log(client, "Конец программы!");
                 socket.emit('no sign up', client);
             }
         }
 
         page.on('domcontentloaded', listener);
 
-        var [page, flag] = await toSignUp(client, page);
+        [page, flag] = await toSignUp(client, page);
 
         if (!flag) {
             page.removeListener('domcontentloaded', listener);
             await _logOut(page, browser);
+            log(client, "Конец программы!");
             socket.emit('no sign up', client);
         }
     }
