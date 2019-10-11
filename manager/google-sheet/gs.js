@@ -41,7 +41,7 @@ function getGoogleSpredSheet(conf) {
         async getClientsForSeach() {
             let arrOfClientsTbl = await promisify(this.sh.getRows)({
                 offset: 1,
-                query: 'статус != "В работе"'
+                query: 'статус != "В работе" and статус != "Срочный"'
             });
             let clientsArrQue = this._prepareClients(arrOfClientsTbl);
             return clientsArrQue.map(client => new GoogleTable.Client({ ...client, type: 'seach', conf: conf.confJob.seach }));
@@ -50,7 +50,7 @@ function getGoogleSpredSheet(conf) {
         async getClientsForNight() {
             let arrOfClientsTbl = await promisify(this.sh.getRows)({
                 offset: 1,
-                query: 'статус != "В работе"'
+                query: 'статус != "В работе" and статус != "Срочный"'
             });
             arrOfClientsTbl = arrOfClientsTbl.filter(client => client['люди'] == 1)
             let clientsArrQue = this._prepareClients(arrOfClientsTbl);

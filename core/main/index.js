@@ -53,6 +53,12 @@ function index(conf) {
             }
             else if (flag && client.conf.numOfTry > 1) {
                 [page, flag] = await toSignUp(client, page);
+                if (!flag) {
+                    page.removeListener('domcontentloaded', listener);
+                    await _logOut(page, browser);
+                    log(client, "Конец программы!");
+                    socket.emit('no sign up', client);
+                }
             }
             else {
                 await page.screenshot({ path: path_to.time(client, '_err'), fullPage: true });
