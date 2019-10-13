@@ -4,9 +4,9 @@ function index(conf) {
     const puppeteer = conf.develop ? require('puppeteer') : require('puppeteer-core');
     const log = require(path.join(__dirname, '..', '..', '/common/log'));
     const path_to = require(path.join(__dirname, '..', '..', '/common/path_to'));
-    const { authorization, toFillOutFormsMsk, checkTimetable, toSignUp, _logOut } = require(path.join(__dirname, '..', '/brain/mainFunctions'))(conf);
+    const { authorization, toFillOutFormsMsk, toFillOutFormsEkat, checkTimetable, toSignUp, _logOut } = require(path.join(__dirname, '..', '/brain/mainFunctions'))(conf);
 
-    async function mainMskSeach(client) {
+    async function mainSeach(client) {
         var launchOptions = {
             headless: !conf.develop,
             args: [`--proxy-server=${client.proxy}`, '--lang=ru'],
@@ -21,7 +21,12 @@ function index(conf) {
             await page.goto('https://cgifederal.secure.force.com/scheduleappointment');
         }
         else {
-            [page, date] = await checkTimetable(client, await toFillOutFormsMsk(client, page, browser), browser);
+            if (client.city == 'Msk') {
+                [page, date] = await checkTimetable(client, await toFillOutFormsMsk(client, page, browser), browser);
+            }
+            else if (client.city == 'Ekat') {
+                [page, date] = await checkTimetable(client, await toFillOutFormsEkat(client, page, browser), browser);
+            }
         }
 
         while (!date && client.conf.numOfReload-- > 1) {
@@ -37,7 +42,7 @@ function index(conf) {
         return { type: 2, data: { browser: browser, page: page, client: client, date: date } };
     }
 
-    async function mainMskSign({ browser, page, client }, socket) {
+    async function mainSign({ browser, page, client }, socket) {
 
         var flag = false;
 
@@ -81,7 +86,7 @@ function index(conf) {
         }
     }
 
-    return { mainMskSeach: mainMskSeach, mainMskSign: mainMskSign }
+    return { mainSeach: mainSeach, mainSign: mainSign }
 }
 
 module.exports = index;

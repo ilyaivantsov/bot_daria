@@ -11,14 +11,17 @@ var socketHandler = require(path.join(__dirname, '/manager/socket/socketHandler'
 // Queues
 var queueSeach = new Queue({ URL: conf.queue.QueueUrls.seach });
 var queueNight = new Queue({ URL: conf.queue.QueueUrls.night });
+var queueNightEkat = new Queue({ URL: conf.queue.QueueUrls.nightEkat });
 var queueSign = new Queue({ URL: conf.queue.QueueUrls.sign });
 var queueSigned = new Queue({ URL: conf.queue.QueueUrls.signed });
 //Cycles
 var cycleSeach = new Cycle({ socket: socket, queue: queueSeach, nameCycle: "Поиск" });
 var cycleNight = new Cycle({ socket: socket, queue: queueNight, nameCycle: "Ночь", numClients: 3, cronScheme: conf.cronJob.night });
+var cycleNightEkat = new Cycle({ socket: socket, queue: queueNightEkat, city: "Ekat", nameCycle: "Ночь (Екат)", numClients: 1, cronScheme: conf.cronJob.night });
 var cycleSign = new Cycle({ socket: socket, queue: queueSign, nameCycle: "Запись", numClients: 5, cronScheme: conf.cronJob.sign });
 //Params
 var gsParams = { nameOfTable: conf.google_sheet.nameOfTable };
+var gsParamsEkat = { nameOfTable: conf.google_sheet.nameOfTableEkat };
 
 bot.action("seach_on", ({ reply }) => {
     if (cycleSeach.on) {
@@ -51,6 +54,22 @@ bot.action("night_off", () => {
     cycleNight.on = false;
     cycleNight.cronStop();
     bot.sendMsgToAdmin("🙈 Ночной бот выключен!");
+})
+
+bot.action("night_on_ekat", ({ reply }) => {
+    if (cycleNightEkat.on) {
+        reply(`Уже работает`);
+        return 0;
+    }
+    bot.sendMsgToAdmin('🙉 Ночной бот включен! (Екат)');
+    cycleNightEkat.on = true;
+    cycleNightEkat.cronStart(bot);
+})
+
+bot.action("night_off_ekat", () => {
+    cycleNightEkat.on = false;
+    cycleNightEkat.cronStop();
+    bot.sendMsgToAdmin("🙈 Ночной бот выключен! (Екат)");
 })
 
 bot.action("sign_on", ({ reply }) => {
@@ -103,13 +122,32 @@ bot.action("queue_create_night", async ({ replyWithMarkdown }) => {
     return 0;
 })
 
+bot.action("queue_create_night_ekat", async ({ replyWithMarkdown }) => {
+    if (queueNightEkat.process) {
+        replyWithMarkdown(`*Подождите...*`);
+        return 0;
+    }
+    var nowTime = new Date();
+    var gsEkat = await gs.build(gsParamsEkat);
+    var clients = await gsEkat.getClientsForNight();
+    queueNightEkat.generateQueue(clients)
+        .then(() => {
+            replyWithMarkdown(`Очередь для ночного бота создана за 
+*${(new Date() - nowTime) / 1000}* сек. (Екат)`);
+        })
+        .catch(err => replyWithMarkdown(err));
+    return 0;
+})
+
 bot.action("queue_create_info", async ({ replyWithMarkdown }) => {
     let seachClients = await queueSeach.numOfClients();
     let nightClients = await queueNight.numOfClients();
     let signClients = await queueSign.numOfClients();
+    let ekatClients = await queueNightEkat.numOfClients();
     replyWithMarkdown(`В очереди для поиска: *${seachClients}* 
 В очереди для ночного: *${nightClients}*
-В очереди для записи: *${signClients}*`);
+В очереди для записи: *${signClients}*
+Екат: *${ekatClients}*`);
     return 0;
 })
 
@@ -122,6 +160,12 @@ bot.action("queue_clear_seach", async ({ reply }) => {
 bot.action("queue_clear_night", async ({ reply }) => {
     await queueNight.clearQueue();
     reply("Очередь для ночного бота очищена!");
+    return 0;
+})
+
+bot.action("queue_clear_night_ekat", async ({ reply }) => {
+    await queueNightEkat.clearQueue();
+    reply("Очередь для ночного бота очищена! (Екат)");
     return 0;
 })
 

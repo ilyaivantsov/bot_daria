@@ -1,7 +1,7 @@
 var CronJob = require('cron').CronJob;
 
 class Cycle {
-    constructor({ socket, queue, numClients = 1, nameCycle = 'Seach', cronScheme = "*/30 * * * * *" }) {
+    constructor({ socket, queue, city = 'Msk', numClients = 1, nameCycle = 'Seach', cronScheme = "*/30 * * * * *" }) {
         this.socket = socket;
         this.queue = queue;
         this.on = false;
@@ -9,6 +9,7 @@ class Cycle {
         this.nameCycle = nameCycle;
         this.cronJob = null;
         this.cronScheme = cronScheme;
+        this.city = city;
     }
 
     async tick() {
@@ -20,6 +21,7 @@ class Cycle {
             if (!client) {
                 break;
             }
+            client.city = this.city;
             this.socket.emit('on bot', client);
             msg += `${i + 1}) ${client.login}
 `;

@@ -226,6 +226,84 @@ function main(conf) {
         }
     }
 
+    async function toFillOutFormsEkat(client, page, browser) {
+        try {
+            var nextSteps, ansArr;
+            // Step 1.
+            const buttonApply = await page.$('.current');
+            await buttonApply.click();
+            await page.waitForNavigation();
+            await page.waitForSelector('input[type="submit"]');
+            // Step 2.
+            nextSteps = await page.$$('input[type="submit"]');
+            ansArr = await page.$$('input[type="radio"]');
+            await ansArr[0].click();
+            await nextSteps[1].click();
+            await page.waitForNavigation();
+            await page.waitForSelector('input[type="submit"]');
+            // Step 3.
+            nextSteps = await page.$$('input[type="submit"]');
+            ansArr = await page.$$('input[type="radio"]');
+            await ansArr[4].click();
+            await nextSteps[1].click();
+            await page.waitForNavigation();
+            await page.waitForSelector('input[type="submit"]');
+            // Step 4.
+            nextSteps = await page.$$('input[type="submit"]');
+            ansArr = await page.$$('input[type="radio"]');
+            await ansArr[1].click();
+            await nextSteps[1].click();
+            await page.waitForNavigation();
+            await page.waitForSelector('input[type="submit"]');
+            // Step 5.
+            nextSteps = await page.$$('input[type="submit"]');
+            ansArr = await page.$$('input[type="radio"]');
+            await ansArr[1].click();
+            await nextSteps[1].click();
+            await page.waitForNavigation();
+            await page.waitForSelector('input[type="submit"]');
+            // Step 6.
+            nextSteps = await page.$('input[type="button"]');
+            await nextSteps.click();
+            await page.waitForNavigation();
+            await page.waitForSelector('input[type="submit"]');
+            // Step 7.
+            nextSteps = await page.$$('input[type="submit"]');
+            await nextSteps[1].click();
+            await page.waitForNavigation();
+            await page.waitForSelector('input[type="submit"]');
+            // Step 8.
+            nextSteps = await page.$$('input[type="submit"]'); // No. Belrus
+            await nextSteps[1].click();
+            await page.waitForNavigation();
+            await page.waitForSelector('input[type="submit"]');
+            // Step 9. Disabled
+            nextSteps = await page.$$('input[type="submit"]');
+            await nextSteps[2].click();
+            await page.waitForNavigation();
+            await page.waitForSelector('input[type="submit"]');
+            // Step 9. 
+            nextSteps = await page.$$('input[type="submit"]');
+            await nextSteps[1].click();
+            await page.waitForNavigation();
+            await page.waitForSelector('button');
+            // Step 10.
+            const submitInfoFromModalWindow = await page.$('button');
+            await submitInfoFromModalWindow.click();
+            nextSteps = await page.$$('input[type="submit"]');
+            await nextSteps[1].click();
+            await page.waitForNavigation();
+            // Step 11. Calendar
+            return page;
+        }
+        catch (err) {
+            errLog(err, client);
+            await page.screenshot({ path: path_to.fill(client), fullPage: true });
+            await _logOut(page, browser);
+            throw ({ type: 2 });
+        }
+    }
+
     async function toFillOutFormsVld(client, page, browser) {
         try {
             var nextSteps, ansArr;
@@ -331,7 +409,6 @@ function main(conf) {
             if (page.url().split('?')[0] != scheduleURL) {
                 await page.goto(scheduleURL);
             }
-            client.conf.numOfTry--;
 
             const timeTable = await page.$$('td[onclick]');
 
@@ -357,6 +434,7 @@ function main(conf) {
             await submit.click();
 
             log(client, `Попытка записи ${client.conf.numOfTry}`);
+            client.conf.numOfTry--;
             return [page, true];
         }
         catch (err) {
@@ -366,5 +444,5 @@ function main(conf) {
         }
     }
 
-    return { authorization, toFillOutFormsMsk, checkTimetable, toFillOutFormsVld, toSignUp, _logOut };
+    return { authorization, toFillOutFormsMsk, toFillOutFormsEkat, checkTimetable, toFillOutFormsVld, toSignUp, _logOut };
 }
