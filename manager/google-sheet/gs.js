@@ -47,14 +47,14 @@ function getGoogleSpredSheet(conf) {
             return clientsArrQue.map(client => new GoogleTable.Client({ ...client, type: 'seach', conf: conf.confJob.seach }));
         }
 
-        async getClientsForNight() {
+        async getClientsForNight(city = "Msk") {
             let arrOfClientsTbl = await promisify(this.sh.getRows)({
                 offset: 1,
                 query: 'статус != "В работе" and статус != "Срочный"'
             });
             arrOfClientsTbl = arrOfClientsTbl.filter(client => client['люди'] == 1)
             let clientsArrQue = this._prepareClients(arrOfClientsTbl);
-            return clientsArrQue.map(client => new GoogleTable.Client({ ...client, type: 'night', conf: conf.confJob.night }));
+            return clientsArrQue.map(client => new GoogleTable.Client({ ...client, city: city, type: 'night', conf: conf.confJob.night }));
         }
 
         /**

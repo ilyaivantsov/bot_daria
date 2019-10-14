@@ -17,7 +17,7 @@ var queueSigned = new Queue({ URL: conf.queue.QueueUrls.signed });
 //Cycles
 var cycleSeach = new Cycle({ socket: socket, queue: queueSeach, nameCycle: "Поиск" });
 var cycleNight = new Cycle({ socket: socket, queue: queueNight, nameCycle: "Ночь", numClients: 3, cronScheme: conf.cronJob.night });
-var cycleNightEkat = new Cycle({ socket: socket, queue: queueNightEkat, city: "Ekat", nameCycle: "Ночь (Екат)", numClients: 1, cronScheme: conf.cronJob.night });
+var cycleNightEkat = new Cycle({ socket: socket, queue: queueNightEkat, nameCycle: "Ночь (Екат)", numClients: 1, cronScheme: conf.cronJob.night });
 var cycleSign = new Cycle({ socket: socket, queue: queueSign, nameCycle: "Запись", numClients: 5, cronScheme: conf.cronJob.sign });
 //Params
 var gsParams = { nameOfTable: conf.google_sheet.nameOfTable };
@@ -129,7 +129,7 @@ bot.action("queue_create_night_ekat", async ({ replyWithMarkdown }) => {
     }
     var nowTime = new Date();
     var gsEkat = await gs.build(gsParamsEkat);
-    var clients = await gsEkat.getClientsForNight();
+    var clients = await gsEkat.getClientsForNight('Ekat');
     queueNightEkat.generateQueue(clients)
         .then(() => {
             replyWithMarkdown(`Очередь для ночного бота создана за 
@@ -147,7 +147,7 @@ bot.action("queue_create_info", async ({ replyWithMarkdown }) => {
     replyWithMarkdown(`В очереди для поиска: *${seachClients}* 
 В очереди для ночного: *${nightClients}*
 В очереди для записи: *${signClients}*
-Екат: *${ekatClients}*`);
+В очереди для ночного (Екат): *${ekatClients}*`);
     return 0;
 })
 

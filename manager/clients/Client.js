@@ -3,13 +3,12 @@ module.exports = (conf) => {
     const proxyArr = conf.proxyArr;
 
     return class {
-        constructor({ login, password, proxy = null, city = 'Msk', id = 0, status = false, proxy_auth = { username: 'iwww68_gmail_com', password: 'cde999c75e' }, afterDate = { month: 6, day: 16, year: 2019 }, beforeDate = { month: 10, day: 16, year: 2019 }, conf = { numOfReload: undefined, delay: undefined, numOfTry: undefined, quickCycle: undefined } }) {
+        constructor({ login, password, proxy = null, city = "Msk", type = "seach", id = 0, proxy_auth = { username: 'iwww68_gmail_com', password: 'cde999c75e' }, afterDate = { month: 6, day: 16, year: 2019 }, beforeDate = { month: 10, day: 16, year: 2019 }, conf = { numOfReload: undefined, delay: undefined, numOfTry: undefined, quickCycle: undefined } }) {
             this.password = password;
             this.login = login;
             this.id = id;
             this.device = deviceArr[Math.floor(Math.random() * deviceArr.length)];
             this.proxy = proxy || proxyArr[Math.floor(Math.random() * proxyArr.length)];
-            this.status = status;     // if true - private, false - coordinator
             this.proxy_auth = proxy_auth;
             this.isApptAvlb = false;
             this.failToAuth = 0;
@@ -20,6 +19,7 @@ module.exports = (conf) => {
             this.conf = conf;
             this.error = '';
             this.city = city;
+            this.type = type;
         }
     }
 
