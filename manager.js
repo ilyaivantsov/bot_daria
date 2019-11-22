@@ -13,12 +13,14 @@ var queueSeach = new Queue({ URL: conf.queue.QueueUrls.seach });
 var queueNight = new Queue({ URL: conf.queue.QueueUrls.night });
 var queueNightEkat = new Queue({ URL: conf.queue.QueueUrls.nightEkat });
 var queueSign = new Queue({ URL: conf.queue.QueueUrls.sign });
+var queueSignEkat = new Queue({ URL: conf.queue.QueueUrls.signEkat });
 var queueSigned = new Queue({ URL: conf.queue.QueueUrls.signed });
 //Cycles
 var cycleSeach = new Cycle({ socket: socket, queue: queueSeach, nameCycle: "Поиск" });
 var cycleNight = new Cycle({ socket: socket, queue: queueNight, nameCycle: "Ночь", numClients: 3, cronScheme: conf.cronJob.night });
 var cycleNightEkat = new Cycle({ socket: socket, queue: queueNightEkat, nameCycle: "Ночь (Екат)", numClients: 1, cronScheme: conf.cronJob.night });
 var cycleSign = new Cycle({ socket: socket, queue: queueSign, nameCycle: "Запись", numClients: 5, cronScheme: conf.cronJob.sign });
+var cycleSignEkat = new Cycle({ socket: socket, queue: queueSignEkat, nameCycle: "Запись (Екат)", numClients: 5, cronScheme: conf.cronJob.sign });
 //Params
 var gsParams = { nameOfTable: conf.google_sheet.nameOfTable };
 var gsParamsEkat = { nameOfTable: conf.google_sheet.nameOfTableEkat };
@@ -87,6 +89,23 @@ bot.action("sign_off", () => {
     cycleSign.cronStop();
     bot.sendMsgToAdmin("🙈 Бот для записи выключен!");
 })
+
+bot.action("sign_on_ekat", ({ reply }) => {
+    if (cycleSignEkat.on) {
+        reply(`Уже работает`);
+        return 0;
+    }
+    bot.sendMsgToAdmin('🙉 Бот для записи включен! (Екат)');
+    cycleSignEkat.on = true;
+    cycleSignEkat.cronStart(bot);
+})
+
+bot.action("sign_off_ekat", () => {
+    cycleSignEkat.on = false;
+    cycleSignEkat.cronStop();
+    bot.sendMsgToAdmin("🙈 Бот для записи выключен! (Екат)");
+})
+
 
 bot.action("queue_create_seach", async ({ replyWithMarkdown }) => {
     if (queueSeach.process) {

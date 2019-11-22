@@ -70,9 +70,8 @@ function getGoogleSpredSheet(conf) {
             });
             let clientsArrQue = this._prepareClients(arrOfClientsTbl);
             clientsArrQue = clientsArrQue.filter((client) => {
-                const currYear = new Date().getFullYear();
-                const afterDate = new Date(currYear, client.afterDate.month, client.afterDate.day).getTime();
-                const beforeDate = new Date(currYear, client.beforeDate.month, client.beforeDate.day).getTime();
+                const afterDate = new Date(client.afterDate.year, client.afterDate.month, client.afterDate.day).getTime();
+                const beforeDate = new Date(client.beforeDate.year, client.beforeDate.month, client.beforeDate.day).getTime();
                 return date.some(ell => ell.date >= afterDate && ell.date <= beforeDate);
             });
             return clientsArrQue.map(client => new GoogleTable.Client({ ...client, type: 'sign', conf: conf.confJob.sign }));
