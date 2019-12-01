@@ -17,7 +17,7 @@ io.on('connection', (socket) => {
                 socket.emit('no time', client);
             }
             if (type == 2) {
-                socket.emit('time', client, data.date);
+                io.emit('time', client, data.date);
                 await mainSign(data, socket);
             }
             return 0;
@@ -43,4 +43,4 @@ io.on('connection', (socket) => {
     })
 });
 
-server.listen(6481);
+server.listen(3000);
