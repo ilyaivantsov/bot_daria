@@ -426,8 +426,10 @@ function main(conf) {
 
             var num = avlDateForClient.map(elm => elm.num);
 
-            await timeTable[num[Math.floor(Math.random() * num.length)]].click();
-            await page.waitFor(3000);
+            if (avlDateForClient[0].num != 0) {
+                await timeTable[num[Math.floor(Math.random() * num.length)]].click();
+                await page.waitFor(3000);
+            }
             const selectDate = await page.$$('input[type="checkbox"]');
             await selectDate[Math.floor(Math.random() * selectDate.length)].click();
             const submit = await page.$('input[type="button"]');

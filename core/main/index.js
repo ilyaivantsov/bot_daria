@@ -28,6 +28,15 @@ function index(conf) {
                 [page, date] = await checkTimetable(client, await toFillOutFormsEkat(client, page, browser), browser);
             }
         }
+        if (client.type == 'night') {
+            let nowTime = new Date();
+            let y = nowTime.getFullYear(),
+                m = nowTime.getMonth(),
+                d = nowTime.getDate(),
+                h = nowTime.getHours();
+            let delay = new Date(y, m, d, h, 48, 15).getTime() - nowTime;
+            if (delay > 0) await page.waitFor(delay + Math.floor(Math.random() * 3000));
+        }
 
         while (!date && client.conf.numOfReload-- > 1) {
             [page, date] = await checkTimetable(client, page, browser);
